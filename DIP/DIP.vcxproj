@@ -156,12 +156,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="centerOfTheMass.h" />
     <ClInclude Include="colorHelper.h" />
     <ClInclude Include="FeaturesDetector.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CenterOfTheMass.cpp" />
     <ClCompile Include="ColorHelper.cpp" />
     <ClCompile Include="DIP.cpp" />
     <ClCompile Include="FeaturesDetector.cpp" />
