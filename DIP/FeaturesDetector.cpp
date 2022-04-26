@@ -75,7 +75,7 @@ void FeaturesDetector::AssignText(int objectsCount, std::vector<cv::Point>& mass
 	}
 }
 
-void FeaturesDetector::etalonsClassification(cv::Mat src, cv::Mat& cl, cv::Mat& dst)
+void FeaturesDetector::etalonsClassification(cv::Mat src1, cv::Mat src2, cv::Mat& cl, cv::Mat& dst)
 {
 	std::vector<float> coordinateAreas;
 	std::vector<float> centerOfMassAreas;
@@ -84,15 +84,16 @@ void FeaturesDetector::etalonsClassification(cv::Mat src, cv::Mat& cl, cv::Mat& 
 	std::vector<float> F2;
 	std::vector<float> uMin;
 	std::vector<float> uMax;
-	cv::Mat indexedImg = cv::Mat::zeros(src.size(), src.type());
-	dst = cv::Mat::zeros(src.size(), CV_32FC3);
+	cv::Mat indexedtrainImg = cv::Mat::zeros(src1.size(), src1.type());
+	dst = cv::Mat::zeros(src1.size(), CV_32FC3);
 	std::vector<cv::Mat> coordinateMoments;
 	std::vector<cv::Mat> centerOfMassMoments;
 	std::vector <cv::Point> massCenters;
+	std::vector<cv::Point> etalons;
 
-	int objectsCount = objectIndexing(src, indexedImg);
+	int objectsCount = objectIndexing(src1, indexedtrainImg);
 	featureExtraction(
-		indexedImg, 
+		indexedtrainImg, 
 		coordinateMoments, 
 		circumferenceAreas, 
 		objectsCount, 
@@ -103,7 +104,8 @@ void FeaturesDetector::etalonsClassification(cv::Mat src, cv::Mat& cl, cv::Mat& 
 		centerOfMassAreas, 
 		massCenters);
 
-	etalonsComputing(src, dst, F1, F2, objectsCount);
+	etalons = etalonsComputing(indexedtrainImg, cl, F1, F2, objectsCount);
+	//processEtalons(src, dst, massCenters, etalons, F1, F2, objectsCount);
 }
 
 std::vector<cv::Point> FeaturesDetector::getLookAroundMatrix(bool diagonal)
@@ -396,7 +398,7 @@ bool FeaturesDetector::checkBoundaries(cv::Point pixel, cv::Mat src)
 
 std::vector<cv::Point> FeaturesDetector::etalonsComputing(cv::Mat src, cv::Mat& dst, std::vector<float> F1, std::vector<float> F2, int count)
 {
-	std::vector<cv::Point> etalon_classes;
+	std::vector<cv::Point> etalons;
 	dst = cv::Mat(src.size(), CV_32FC3, cv::Scalar(0.0, 0.0, 0.0));
 
 	// check wrong data
@@ -415,43 +417,45 @@ std::vector<cv::Point> FeaturesDetector::etalonsComputing(cv::Mat src, cv::Mat& 
 	int Nr = 0;
 	for (int i = 1; i < count; i++) {
 		cv::circle(dst, cv::Point(F1[i] * dst.cols, F2[i] * dst.rows), 3, cv::Vec3f(1.0, 1.0, 1.0));
-		if (round(F1[i]) == round(old_f1) && round(F2[i]) == round(old_f2))
-		{
-			etalon_f1 += F1[i];
-			etalon_f2 += F2[i];
-			Nr += 1;
+		if (!isnan(F1[i]) && !isnan(F2[i])) {
+			if (round(F1[i]) == round(old_f1) && round(F2[i]) == round(old_f2))
+			{
+				etalon_f1 += F1[i];
+				etalon_f2 += F2[i];
+				Nr += 1;
+			}
+			else {	// add etalon new class
+				cv::Point x;
+				x.x = (1.0f / (float)Nr) * etalon_f1;
+				x.y = (1.0f / (float)Nr) * etalon_f2;
+				etalons.push_back(x);
+				etalon_f1 = 0;
+				etalon_f2 = 0;
+				Nr = 0;
+			}
+			if (i == count - 1) {	// add etalon last class
+				cv::Point x;
+				x.x = (1.0f / (float)Nr) * etalon_f1;
+				x.y = (1.0f / (float)Nr) * etalon_f2;
+				etalons.push_back(x);
+			}
+			old_f1 = F1[i];
+			old_f2 = F2[i];
 		}
-		else {	// add etalon new class
-			cv::Point x;
-			x.x = (1.0f / (float)Nr) * etalon_f1;
-			x.y = (1.0f / (float)Nr) * etalon_f2;
-			etalon_classes.push_back(x);
-			etalon_f1 = 0;
-			etalon_f2 = 0;
-			Nr = 0;
-		}
-		if (i == count - 1) {	// add etalon last class
-			cv::Point x;
-			x.x = (1.0f / (float)Nr) * etalon_f1;
-			x.y = (1.0f / (float)Nr) * etalon_f2;
-			etalon_classes.push_back(x);
-		}
-		old_f1 = F1[i];
-		old_f2 = F2[i];
 	}
-	for (int i = 0; i < etalon_classes.size(); i++) {
-		cv::Point etalon = etalon_classes[i];
+	for (int i = 0; i < etalons.size(); i++) {
+		cv::Point etalon = etalons[i];
 		float x = etalon.x * dst.cols;
 		float y = etalon.y * dst.rows;
 		cv::Vec3f color = ColorHelper::generateColor();
 		cv::circle(dst, cv::Point(x, y), 4, color, -1);
 	}
 
-	return etalon_classes;
+	return etalons;
 	return std::vector<cv::Point>();
 }
 
-void FeaturesDetector::processEtalons(cv::Mat src, cv::Mat& dst, std::vector<cv::Point> centerOfMasses, std::vector<cv::Point> etalons, std::vector<float>& F1, std::vector<float>& F2, int count)
+void FeaturesDetector::processEtalons(cv::Mat src, cv::Mat& dst, std::vector<cv::Point> massCenters, std::vector<cv::Point> etalons, std::vector<float>& F1, std::vector<float>& F2, int count)
 {
 	dst = src.clone();
 	cv::cvtColor(dst, dst, cv::COLOR_GRAY2BGR);
@@ -461,7 +465,7 @@ void FeaturesDetector::processEtalons(cv::Mat src, cv::Mat& dst, std::vector<cv:
 	for (int i = 1; i < count; i++) {
 		if (isnan(F1[i]) || isnan(F2[i])) {
 			count -= 1;
-			centerOfMasses.erase(centerOfMasses.begin() + i);
+			massCenters.erase(massCenters.begin() + i);
 			F1.erase(F1.begin() + i);
 			F2.erase(F2.begin() + i);
 		}
@@ -471,7 +475,7 @@ void FeaturesDetector::processEtalons(cv::Mat src, cv::Mat& dst, std::vector<cv:
 
 	for (int i = 1; i < count; i++) {
 		float distance = 100.0f;
-		float etalon_index;
+		float etalon_index = -1;
 		for (int j = 0; j < etalons.size(); j++) {
 			cv::Point etalon = etalons[j];
 			float x = etalon.x - F1[i];
@@ -487,7 +491,7 @@ void FeaturesDetector::processEtalons(cv::Mat src, cv::Mat& dst, std::vector<cv:
 			}
 		}
 
-		cv::Point center = centerOfMasses[i];
+		cv::Point center = massCenters[i];
 		cv::Vec3f color = colors[etalon_index];
 		cv::circle(dst, cv::Point(center.x, center.y), 7, color, -1);
 	}
