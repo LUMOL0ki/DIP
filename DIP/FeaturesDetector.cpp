@@ -451,6 +451,48 @@ std::vector<cv::Point> FeaturesDetector::etalonsComputing(cv::Mat src, cv::Mat& 
 	return std::vector<cv::Point>();
 }
 
+void FeaturesDetector::processEtalons(cv::Mat src, cv::Mat& dst, std::vector<cv::Point> centerOfMasses, std::vector<cv::Point> etalons, std::vector<float>& F1, std::vector<float>& F2, int count)
+{
+	dst = src.clone();
+	cv::cvtColor(dst, dst, cv::COLOR_GRAY2BGR);
+	std::vector<cv::Vec3f> colors;
+
+	// check wrong data
+	for (int i = 1; i < count; i++) {
+		if (isnan(F1[i]) || isnan(F2[i])) {
+			count -= 1;
+			centerOfMasses.erase(centerOfMasses.begin() + i);
+			F1.erase(F1.begin() + i);
+			F2.erase(F2.begin() + i);
+		}
+	}
+
+	ColorHelper::generateColors(count + 1, colors); // plus background.
+
+	for (int i = 1; i < count; i++) {
+		float distance = 100.0f;
+		float etalon_index;
+		for (int j = 0; j < etalons.size(); j++) {
+			cv::Point etalon = etalons[j];
+			float x = etalon.x - F1[i];
+			float y = etalon.y - F2[i];
+			float dist;
+			dist = pow(x, 2) + pow(y, 2);
+			dist = sqrt(dist);
+
+			if (dist < distance)
+			{
+				distance = dist;
+				etalon_index = j;
+			}
+		}
+
+		cv::Point center = centerOfMasses[i];
+		cv::Vec3f color = colors[etalon_index];
+		cv::circle(dst, cv::Point(center.x, center.y), 7, color, -1);
+	}
+}
+
 void FeaturesDetector::printFeaturesToConsole(std::vector<cv::Point> massCenters, std::vector<float> coordinateAreas, std::vector<float> centerOfMassAreas, std::vector<float> circumferenceAreas, std::vector<float> F1s, std::vector<float> F2s, std::vector<float> uMins, std::vector<float> uMaxes)
 {
 	for (int i = 0; i < coordinateAreas.size(); i++) 
