@@ -22,7 +22,12 @@ public:
 	/// <param name="src">Source image.</param>
 	/// <param name="dst">Indexed destination image.</param>
 	/// <returns></returns>
-	std::vector<CenterOfTheMass> objectIndexingColoredAndNumbered(cv::Mat src, cv::Mat& dst);
+	std::vector<cv::Point> objectIndexingColoredAndNumbered(cv::Mat src, cv::Mat& dst);
+
+	void AssignText(int objectsCount, std::vector<cv::Point>& massCenters, cv::Mat& dst, std::vector<float>& centerOfMassAreas, std::vector<float>& circumferenceAreas);
+
+	void etalonsClassification(cv::Mat src, cv::Mat& cl, cv::Mat& dst);
+	void kmeansClustering(cv::Mat src, cv::Mat& cl, cv::Mat& dst);
 private:
 	/// <summary>
 	/// Indexing objects.
@@ -41,7 +46,6 @@ private:
 	void getCoordinateMoments(cv::Mat src, std::vector<cv::Mat>& coordinateMoments, std::vector<float>& circumferenceMoments, int count);
 	void getCenterOfMassMoments(cv::Mat& src, std::vector<cv::Mat>& coordinateMoments, std::vector<cv::Mat>& centerOfMassMoments);
 	std::vector<cv::Point> getLookAroundMatrix(bool diagonal = true);
-	//std::vector<float> getAreas(std::vector<float> circumferences, std::vector<float> F1, std::vector<float> F2, std::vector<float> uMin, std::vector<float> uMax);
 	void getClassificationMoments(std::vector<cv::Mat> centerOfMassMoments, std::vector<float> circumferenceMoments, std::vector<float>& F1, std::vector<float>& F2, std::vector<float>& uMin, std::vector<float>& uMax);
 	const cv::Point2i& getPixelToCheck(cv::Point pixel, cv::Point neighbor);
 	void initializeMoments(cv::Mat src, std::vector<cv::Mat>& coordinateMoments, std::vector<float>& circumferenceMoments, int count);
@@ -61,9 +65,12 @@ private:
 	void calculateuMinuMax(float& uMin, float& uMax, cv::Mat centerOfTheMassMoment);
 	float calculateArea(cv::Mat objectMoment);
 	void calculateAreas(std::vector<cv::Mat> moments, std::vector<float>& momentsAreas);
-	CenterOfTheMass calculateCenterOfMass(cv::Mat coordinateMoment);
-	void calculateMassCenters(std::vector<cv::Mat>& coordinateMoments, std::vector<CenterOfTheMass>& massCenters);
+	cv::Point calculateCenterOfMass(cv::Mat coordinateMoment);
+	void calculateMassCenters(std::vector<cv::Mat>& coordinateMoments, std::vector<cv::Point>& massCenters);
+	void featureExtraction(cv::Mat& indexedImg, std::vector<cv::Mat>& coordinateMoments, std::vector<float>& circumferenceAreas, int objectsCount, std::vector<cv::Mat>& centerOfMassMoments, std::vector<float>& F1, std::vector<float>& F2, std::vector<float>& uMin, std::vector<float>& uMax, std::vector<float>& coordinateAreas, std::vector<float>& centerOfMassAreas, std::vector<cv::Point>& massCenters);
 	bool checkBoundaries(cv::Point pixel, cv::Mat src);
+	std::vector<cv::Point> etalonsComputing(cv::Mat src, cv::Mat& dst, std::vector<float> F1, std::vector<float> F2, int count);
+	std::vector<cv::Point> kmeansComputing(cv::Mat src, cv::Mat& dst, std::vector<float> F1, std::vector<float> F2, int count);
 	/// <summary>
 	/// Print features to console.
 	/// </summary>
@@ -75,7 +82,7 @@ private:
 	/// <param name="F2"></param>
 	/// <param name="uMin"></param>
 	/// <param name="uMax"></param>
-	void printFeaturesToConsole(std::vector<CenterOfTheMass> massCenters, std::vector<float> coordinateAreas, std::vector<float> centerOfMassAreas, std::vector<float> circumferenceAreas, std::vector<float> F1, std::vector<float> F2, std::vector<float> uMin, std::vector<float> uMax);
-	std::string generateText(int id, float coordinateArea, float circumferenceArea);
+	void printFeaturesToConsole(std::vector<cv::Point> massCenters, std::vector<float> coordinateAreas, std::vector<float> centerOfMassAreas, std::vector<float> circumferenceAreas, std::vector<float> F1s, std::vector<float> F2s, std::vector<float> uMins, std::vector<float> uMaxes);
+	std::string generateText(int id, float value);
 };
 
