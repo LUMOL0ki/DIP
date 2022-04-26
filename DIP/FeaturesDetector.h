@@ -70,7 +70,10 @@ private:
 	void featureExtraction(cv::Mat& indexedImg, std::vector<cv::Mat>& coordinateMoments, std::vector<float>& circumferenceAreas, int objectsCount, std::vector<cv::Mat>& centerOfMassMoments, std::vector<float>& F1, std::vector<float>& F2, std::vector<float>& uMin, std::vector<float>& uMax, std::vector<float>& coordinateAreas, std::vector<float>& centerOfMassAreas, std::vector<cv::Point>& massCenters);
 	bool checkBoundaries(cv::Point pixel, cv::Mat src);
 	std::vector<cv::Point> etalonsComputing(cv::Mat src, cv::Mat& dst, std::vector<float> F1, std::vector<float> F2, int count);
+	void processEtalons(cv::Mat src, cv::Mat& dst, std::vector<cv::Point> centerOfMasses, std::vector<cv::Point> etalons, std::vector<float>& F1, std::vector<float>& F2, int count);
+
 	std::vector<cv::Point> kmeansComputing(cv::Mat src, cv::Mat& dst, std::vector<float> F1, std::vector<float> F2, int count);
+	void processkmeans(cv::Mat scr, cv::Mat& dst, std::vector<cv::Point> centerOfMasses, std::vector<cv::Point> kmeans, std::vector<float>& F1, std::vector<float>& F2, int objects);
 	/// <summary>
 	/// Print features to console.
 	/// </summary>
