@@ -27,7 +27,10 @@
     <ClInclude Include="colorHelper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="centerOfTheMass.h">
+    <ClInclude Include="object.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="matrixHelper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -41,10 +44,13 @@
     <ClCompile Include="FeaturesDetector.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ColorHelper.cpp">
+    <ClCompile Include="colorHelper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CenterOfTheMass.cpp">
+    <ClCompile Include="object.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="matrixHelper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
