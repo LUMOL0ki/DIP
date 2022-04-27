@@ -28,7 +28,7 @@ public:
 	void AssignText(std::vector<Object> objects, cv::Mat& dst);
 	
 	void etalonsClassification(cv::Mat src1, cv::Mat src2, cv::Mat& cl, cv::Mat& dst);
-	void kmeansClustering(cv::Mat src, cv::Mat& cl, cv::Mat& dst);
+	void kmeansClustering(cv::Mat src1, cv::Mat src2, cv::Mat& cl, cv::Mat& dst);
 private:
 	/// <summary>
 	/// Color me daddy.
@@ -40,10 +40,10 @@ private:
 	int featureExtraction(cv::Mat src, cv::Mat& dst, std::vector<Object>& objects);
 	
 	std::vector<cv::Point2f> etalonsComputing(cv::Mat src, cv::Mat& dst, std::vector<Object> objects);
-	void processEtalons(cv::Mat src, cv::Mat& dst, std::vector<Object> testObjects, std::vector<cv::Point2f> etalons);
+	void processEtalons(cv::Mat src, cv::Mat& dst, std::vector<Object> objects, std::vector<cv::Point2f> etalons);
 	
-	std::vector<cv::Point> kmeansComputing(cv::Mat src, cv::Mat& dst, std::vector<float> F1, std::vector<float> F2, int count);
-	void processkmeans(cv::Mat scr, cv::Mat& dst, std::vector<cv::Point> massCenters, std::vector<cv::Point> kmeans, std::vector<float>& F1, std::vector<float>& F2, int count);
+	std::vector<cv::Point2f> kmeansComputing(cv::Mat src, cv::Mat& dst, std::vector<Object> objects, int numberOfClusters = 3, int steps = 0);
+	void processkmeans(cv::Mat src, cv::Mat& dst, std::vector<Object> objects, std::vector<cv::Point2f> kmeans);
 	/// <summary>
 	/// /// Print features to console.
 	/// </summary>
