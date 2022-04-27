@@ -14,9 +14,13 @@ cv::Vec3f ColorHelper::generateColor()
         float(distr(engine)) / 255);
 }
 
-void ColorHelper::generateColors(int count, std::vector<cv::Vec3f>& colors)
+void ColorHelper::generateColors(int count, std::vector<cv::Vec3f>& colors, bool includeBackground)
 {
-    colors.push_back(ColorHelper::Black());
+    if (includeBackground) 
+    {
+        colors.push_back(ColorHelper::Black());
+    }
+
     for (int i = 0; i < count; i++)
     {
         colors.push_back(ColorHelper::generateColor());
@@ -26,4 +30,9 @@ void ColorHelper::generateColors(int count, std::vector<cv::Vec3f>& colors)
 cv::Vec3f ColorHelper::Black()
 {
     return cv::Vec3f();
+}
+
+cv::Vec3f ColorHelper::White()
+{
+    return cv::Vec3f(1.0, 1.0, 1.0);
 }
