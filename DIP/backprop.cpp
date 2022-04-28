@@ -92,7 +92,19 @@ void releaseNN( NN *& nn )
 }
 
 void feedforward( NN * nn ) 
-{ 
+{
+	double** s = new double* [nn->l - 1];
+	for (int k = 0; k < nn->l - 1; k++) 
+	{
+		s[k] = new double [nn->n[k + 1]];
+
+		for (int j = 0; j < nn->n[k + 1]; j++) 
+		{
+			int i = nn->n[k];
+			s[k][i] += nn->w[k][i][j] * nn->y[k][j];
+			nn->out[i] = 1 / (1 + nn->d[k][i]);
+		}
+	}
 	//TODO
 }
 
