@@ -52,9 +52,9 @@ void FeaturesDetector::AssignText(std::vector<Object> objects, cv::Mat& dst)
 void FeaturesDetector::etalonsClassification(cv::Mat src1, cv::Mat src2, cv::Mat& cl, cv::Mat& dst)
 {
 	cv::Mat indexedtrainImg = cv::Mat::zeros(src1.size(), src1.type());
-	dst = cv::Mat::zeros(src1.size(), CV_32FC3);
-	cv::Mat indexedtestImg = cv::Mat::zeros(src1.size(), src1.type());
-	dst = cv::Mat::zeros(src1.size(), CV_32FC3);
+	cl = cv::Mat::zeros(src1.size(), CV_32FC3);
+	cv::Mat indexedtestImg = cv::Mat::zeros(src2.size(), src2.type());
+	dst = cv::Mat::zeros(src2.size(), CV_32FC3);
 	std::vector<Object> trainObjects;
 	std::vector<Object> testObjects;
 	std::vector<cv::Point2f> etalons;
@@ -68,16 +68,17 @@ void FeaturesDetector::etalonsClassification(cv::Mat src1, cv::Mat src2, cv::Mat
 void FeaturesDetector::kmeansClustering(cv::Mat src1, cv::Mat src2, cv::Mat& cl, cv::Mat& dst)
 {
 	cv::Mat indexedtrainImg = cv::Mat::zeros(src1.size(), src1.type());
-	dst = cv::Mat::zeros(src1.size(), CV_32FC3);
-	cv::Mat indexedtestImg = cv::Mat::zeros(src1.size(), src1.type());
-	dst = cv::Mat::zeros(src1.size(), CV_32FC3);
+	cl = cv::Mat::zeros(src1.size(), CV_32FC3);
+	cv::Mat indexedtestImg = cv::Mat::zeros(src2.size(), src2.type());
+	dst = cv::Mat::zeros(src2.size(), CV_32FC3);
 	std::vector<Object> trainObjects;
 	std::vector<Object> testObjects;
 	std::vector<cv::Point2f> kmeans;
+	int steps = 0;
 
 	featureExtraction(src1, indexedtrainImg, trainObjects);
 	featureExtraction(src2, indexedtestImg, testObjects);
-	kmeans = kmeansComputing(indexedtrainImg, cl, trainObjects);
+	kmeans = kmeansComputing(indexedtrainImg, cl, trainObjects, steps);
 	processkmeans(indexedtestImg, dst, testObjects, kmeans);
 }
 
@@ -109,188 +110,195 @@ int FeaturesDetector::featureExtraction(cv::Mat src, cv::Mat& dst, std::vector<O
 
 std::vector<cv::Point2f> FeaturesDetector::etalonsComputing(cv::Mat src, cv::Mat& dst, std::vector<Object> objects)
 {
+	dst = cv::Mat(src.size(), CV_32FC3, ColorHelper::Black());
 	std::vector<cv::Point2f> etalons;
-	dst = cv::Mat(src.size(), CV_32FC3, cv::Scalar(0.0, 0.0, 0.0));
-	float old_f1 = objects[0].getFirstFeature();
-	float old_f2 = objects[0].getSecondFeature();
-	float etalon_f1 = 0;
-	float etalon_f2 = 0;
+	float currentF1 = objects[0].getFirstFeature();
+	float currentF2 = objects[0].getSecondFeature();
+	float etalonF1 = 0;
+	float etalonF2 = 0;
 	int Nr = 0;
 
 	for (Object object : objects) {
 		cv::circle(dst, cv::Point2f(object.getFirstFeature() * dst.cols, object.getSecondFeature() * dst.rows), 3, ColorHelper::White());
 		
-		if (round(object.getFirstFeature()) == round(old_f1) && round(object.getSecondFeature()) == round(old_f2))
+		if (round(object.getFirstFeature()) == round(currentF1) && round(object.getSecondFeature()) == round(currentF2))
 		{
-			etalon_f1 += object.getFirstFeature();
-			etalon_f2 += object.getSecondFeature();
-			Nr += 1;
+			etalonF1 += object.getFirstFeature();
+			etalonF2 += object.getSecondFeature();
+			Nr++;
 		}
 		else 
-		{	// add etalon new class
-			cv::Point2f x;
-			x.x = (1.0f / (float)Nr) * etalon_f1;
-			x.y = (1.0f / (float)Nr) * etalon_f2;
-			etalons.push_back(x);
-			etalon_f1 = 0;
-			etalon_f2 = 0;
+		{	
+			cv::Point2f newEtalon;
+
+			calculateEtalon(newEtalon, Nr, etalonF1, etalonF2);
+			etalons.push_back(newEtalon);
+			
+			etalonF1 = 0;
+			etalonF2 = 0;
 			Nr = 0;
 		}
 
 		if (object.getId() == objects.size()) 
 		{	
-			cv::Point2f x;
-			x.x = (1.0f / (float)Nr) * etalon_f1;
-			x.y = (1.0f / (float)Nr) * etalon_f2;
-			etalons.push_back(x);
+			cv::Point2f newEtalon;
+			
+			calculateEtalon(newEtalon, Nr, etalonF1, etalonF2);
+			etalons.push_back(newEtalon);
 		}
 
-		old_f1 = object.getFirstFeature();
-		old_f2 = object.getSecondFeature();
+		currentF1 = object.getFirstFeature();
+		currentF2 = object.getSecondFeature();
 	}
 
-	for(cv::Point2f etalon : etalons) 
-	{
-		float x = etalon.x * dst.cols;
-		float y = etalon.y * dst.rows;
-		cv::Vec3f color = ColorHelper::generateColor();
-		cv::circle(dst, cv::Point2f(x, y), 4, color, -1);
-	}
+	drawEtalons(etalons, dst);
 
 	return etalons;
 }
 
-void FeaturesDetector::processEtalons(cv::Mat src, cv::Mat& dst, std::vector<Object> testObjects, std::vector<cv::Point2f> etalons)
+void FeaturesDetector::calculateEtalon(cv::Point2f& etalon, int Nr, float etalonF1, float etalonF2)
+{
+	etalon.x = (1.0f / (float)Nr) * etalonF1;
+	etalon.y = (1.0f / (float)Nr) * etalonF2;
+}
+
+void FeaturesDetector::processEtalons(cv::Mat src, cv::Mat& dst, std::vector<Object> objects, std::vector<cv::Point2f> etalons)
 {
 	dst = src.clone();
 	cv::cvtColor(dst, dst, cv::COLOR_GRAY2BGR);
 	std::vector<cv::Vec3f> colors;
+
 	ColorHelper::generateColors(etalons.size(), colors, false);
 
-	for (int j = 0; j < etalons.size(); j++) {
-		colors.push_back(ColorHelper::generateColor());
-	}
+	for (Object object : objects) 
+	{
+		float currentDistance = 100.0f;
+		int etalonId = -1;
 
-	for (Object object : testObjects) {
-		float distance = 100.0f;
-		float etalon_index = -1;
-		float etalonChoose = 0;
-		for (cv::Point2f etalon : etalons) {
-			float x = etalon.x - object.getFirstFeature();
-			float y = etalon.y - object.getSecondFeature();
-			float dist;
-			dist = sqrt(pow(x, 2) + pow(y, 2));
+		assignIds(etalons, cv::Point2f(object.getFirstFeature(), object.getSecondFeature()), currentDistance, etalonId);
 
-			if (dist < distance)
-			{
-				distance = dist;
-				etalon_index = etalonChoose;
-			}
-			etalonChoose++;
-		}
-
-		cv::Point2f center = object.getCenterOfMass();
-		cv::Vec3f color = colors[etalon_index];
-		cv::circle(dst, object.getCenterOfMass(), 7, color, -1);
+		drawCenterOfObject(object, dst, colors[etalonId]);
 	}
 }
 
-std::vector<cv::Point2f> FeaturesDetector::kmeansComputing(cv::Mat src, cv::Mat& dst, std::vector<Object> objects, int numberOfClusters, int steps)
+void FeaturesDetector::assignIds(std::vector<cv::Point2f> srcClasses, cv::Point2f pixel, float& currentDistance, int& currentId)
 {
-	std::vector<cv::Vec3f> colors;
-	dst = cv::Mat(src.size(), CV_32FC3, cv::Scalar(0.0, 0.0, 0.0));
-	std::random_device rd;
-	std::mt19937 eng(rd());
-	std::uniform_int_distribution<> distrx(0, 1);
-	std::uniform_int_distribution<> distry(0, 1);
+	int newId = 0;
+
+	for (cv::Point2f srcClass : srcClasses)
+	{
+		float newDistance = calculateDistance(srcClass.x - pixel.x, srcClass.y - pixel.y);
+
+		checkDistance(newDistance, currentDistance, newId, currentId);
+
+		newId++;
+	}
+}
+
+double FeaturesDetector::calculateDistance(float x, float y)
+{
+	return sqrt(pow(x, 2) + pow(y, 2));
+}
+
+std::vector<cv::Point2f> FeaturesDetector::kmeansComputing(cv::Mat src, cv::Mat& dst, std::vector<Object> objects, int& steps, int numberOfClusters)
+{
+	dst = cv::Mat(src.size(), CV_32FC3, ColorHelper::Black());
 
 	std::vector<cv::Point2f> centroids;
-	std::vector<cv::Point2f> points;
-	bool find_new_centroids = true;
+	std::vector<cv::Point2f> pixels;
+	std::vector<int> kmeansIds;
+	bool isNewCentroid = true;
 
-	for (int i = 0; i < numberOfClusters; i++) {
-		cv::Point2f cent;
-		cent.x = distrx(eng);
-		cent.y = distry(eng);
-		centroids.push_back(cent);
-		colors.push_back(ColorHelper::generateColor());
-	}
+	initializeCentroids(numberOfClusters, centroids);
+	initializePixels(objects, pixels, dst);
 
-	for (Object object : objects) {
-		cv::Point2f point;
-		point.x = object.getFirstFeature();
-		point.y = object.getSecondFeature();
-		points.push_back(point);
-		cv::circle(dst, cv::Point(object.getFirstFeature() * dst.cols, object.getSecondFeature() * dst.rows), 3, ColorHelper::White());
-	}
+	while (isNewCentroid) 
+	{
+		std::vector<int> kmeansIds;
 
-	// main loop
-	std::vector<int> old_assignment;
-	while (find_new_centroids) {
-		std::vector<int> points_assignment_idx;
-		float kmeansChoose = 0;
-		// distance for each point
-		for (cv::Point2f point : points) {
-			int close_idx = 0;
-			float distance = 10000.0f;
+		for (cv::Point2f pixel : pixels) {
+			float currentDistance = 10000.0f;
+			int kmeansId = -1;
 
-			for (cv::Point2f centroid : centroids) {
-				float dist;
-				cv::Point2f cent = centroid;
-				dist = pow(cent.x - point.x, 2) + pow(cent.y - point.y, 2);
-				dist = sqrt(dist);	// new distance
+			assignIds(centroids, pixel, currentDistance, kmeansId);
 
-				if (dist < distance)
-				{
-					distance = dist;
-					close_idx = kmeansChoose;
-				}
-				kmeansChoose++;
-			}
-			points_assignment_idx.push_back(close_idx);
+			kmeansIds.push_back(kmeansId);
 		}
 
 		int i = 0;
 		// calculate new centroids
-		for (cv::Point2f centroid : centroids) {
+		for (cv::Point2f& centroid : centroids) 
+		{
+			int numberOfPixels = 0;
+			float meanX = 0;
+			float meanY = 0;
+
 			int j = 0;
-			int numOfPoints = 0;
-			float meanx = 0;
-			float meany = 0;
-			for (cv::Point2f point : points) 
+			for (cv::Point2f pixel : pixels) 
 			{
-				if (points_assignment_idx[j] == i)
-				{	// if is assigned to centroid
-					numOfPoints += 1;
-					meanx += point.x;
-					meany += point.y;
+				if (kmeansIds[j] == i)
+				{	
+					numberOfPixels++;
+					meanX += pixel.x;
+					meanY += pixel.y;
 				}
 				j++;
 			}
-			if (numOfPoints > 0) {
-				cv::Point2f cent;
-				cent.x = meanx / numOfPoints;
-				cent.y = meany / numOfPoints;
-				centroid = cent;
-			}
+
+			recalculateCentroid(numberOfPixels, centroid, meanX, meanY);
 			i++;
 		}
 
-		if (old_assignment == points_assignment_idx)
-			find_new_centroids = false;
-		else
-			old_assignment.swap(points_assignment_idx);
+		assignIds(kmeansIds, kmeansIds, isNewCentroid);
+
 		steps++;
 	}
 	// end of loop - final centroids
 
-	for (cv::Point2f centroid : centroids) {
-		int i = 0;
-		cv::Point2f cent = centroid;
-		cv::circle(dst, cv::Point(cent.x * dst.cols, cent.y * dst.rows), 4, colors[i], -1);
-		i++;
-	}
+	drawCentroids(centroids, dst);
 	return centroids;
+}
+
+void FeaturesDetector::recalculateCentroid(int numOfPixels, cv::Point2f& centroid, float meanX, float meanY)
+{
+	if (numOfPixels > 0)
+	{
+		centroid.x = meanX / numOfPixels;
+		centroid.y = meanY / numOfPixels;
+	}
+}
+
+void FeaturesDetector::assignIds(cv::dnn::experimental_dnn_34_v7::MatShape& kmeansIds, cv::dnn::experimental_dnn_34_v7::MatShape& newkmeansIds, bool& isNewCentroid)
+{
+	if (kmeansIds == newkmeansIds)
+	{
+		isNewCentroid = false;
+	}
+	else
+	{
+		kmeansIds.swap(newkmeansIds);
+	}
+}
+
+void FeaturesDetector::checkDistance(float srcDistance, float& dstDistance, float newId, int& currentId)
+{
+	if (srcDistance < dstDistance)
+	{
+		dstDistance = srcDistance;
+		currentId = newId;
+	}
+}
+
+void FeaturesDetector::initializePixels(std::vector<Object>& objects, std::vector<cv::Point2f>& pixels, cv::Mat& dst)
+{
+	for (Object object : objects)
+	{
+		cv::Point2f newPixel;
+		newPixel.x = object.getFirstFeature();
+		newPixel.y = object.getSecondFeature();
+		pixels.push_back(newPixel);
+		cv::circle(dst, cv::Point(newPixel.x * dst.cols, newPixel.y * dst.rows), 3, ColorHelper::White());
+	}
 }
 
 void FeaturesDetector::processkmeans(cv::Mat src, cv::Mat& dst, std::vector<Object> objects, std::vector<cv::Point2f> kmeans)
@@ -298,30 +306,70 @@ void FeaturesDetector::processkmeans(cv::Mat src, cv::Mat& dst, std::vector<Obje
 	dst = src.clone();
 	cv::cvtColor(dst, dst, cv::COLOR_GRAY2BGR);
 	std::vector<cv::Vec3f> colors;
+
 	ColorHelper::generateColors(kmeans.size(), colors, false);
 
-	for (Object object : objects) {
-		float distance = 10000.0f;
-		float centroid_index = 0;
-		int centroidChoose = 0;
-		for (cv::Point2f kmean : kmeans) {
-			float x = kmean.x - object.getFirstFeature();
-			float y = kmean.y - object.getSecondFeature();
-			float dist;
-			dist = pow(x, 2) + pow(y, 2);
-			dist = sqrt(dist);
+	for (Object object : objects) 
+	{
+		float currentDistance = 10000.0f;
+		int centroidId = 0;
+		int newCentroidId = 0;
+		for (cv::Point2f kmean : kmeans) 
+		{
+			float newDistance = calculateDistance(kmean.x - object.getFirstFeature(), kmean.y - object.getSecondFeature());
+			checkDistance(newDistance, currentDistance, newCentroidId, centroidId);
 
-			if (dist < distance)
-			{
-				distance = dist;
-				centroid_index = centroidChoose;
-			}
+			newCentroidId++;
 		}
 
-		cv::Point2f center = object.getCenterOfMass();
-		cv::Vec3f color = colors[centroid_index];
-		cv::circle(dst, cv::Point(center.x, center.y), 7, color, -1);
+		drawCenterOfObject(object, dst, colors[centroidId]);
 	}
+}
+
+void FeaturesDetector::initializeCentroids(int numberOfClusters, std::vector<cv::Point2f>& centroids)
+{
+	std::random_device randomDevice;
+	std::mt19937 engine(randomDevice());
+	std::uniform_int_distribution<> distributionX(0, 1);
+	std::uniform_int_distribution<> distributionY(0, 1);
+
+	for (int i = 0; i < numberOfClusters; i++) {
+		cv::Point2f newCentroid;
+		newCentroid.x = distributionX(engine);
+		newCentroid.y = distributionY(engine);
+		centroids.push_back(newCentroid);
+	}
+}
+
+void FeaturesDetector::drawCentroids(std::vector<cv::Point2f> centroids, cv::Mat& dst)
+{
+	std::vector<cv::Vec3f> colors;
+	int colorId = 0;
+
+	ColorHelper::generateColors(centroids.size(), colors, false);
+
+	for (cv::Point2f centroid : centroids)
+	{
+		cv::circle(dst, cv::Point(centroid.x * dst.cols, centroid.y * dst.rows), 4, colors[colorId], -1);
+		colorId++;
+	}
+}
+
+void FeaturesDetector::drawEtalons(std::vector<cv::Point2f>& etalons, cv::Mat& dst)
+{
+	for (cv::Point2f etalon : etalons)
+	{
+		float x = etalon.x * dst.cols;
+		float y = etalon.y * dst.rows;
+		cv::Vec3f color = ColorHelper::generateColor();
+		cv::circle(dst, cv::Point2f(x, y), 4, color, -1);
+	}
+}
+
+void FeaturesDetector::drawCenterOfObject(Object& object, cv::Mat& dst, cv::Vec3f color)
+{
+	cv::Point2f center = object.getCenterOfMass();
+	cv::circle(dst, cv::Point(center.x, center.y), 7, color, -1);
 }
 
 void FeaturesDetector::printFeaturesToConsole(std::vector<Object> objects)
