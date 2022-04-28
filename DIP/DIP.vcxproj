@@ -156,6 +156,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="backprop.h" />
     <ClInclude Include="colorHelper.h" />
     <ClInclude Include="FeaturesDetector.h" />
     <ClInclude Include="matrixHelper.h" />
@@ -164,6 +165,7 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="backprop.cpp" />
     <ClCompile Include="colorHelper.cpp" />
     <ClCompile Include="DIP.cpp" />
     <ClCompile Include="FeaturesDetector.cpp" />
