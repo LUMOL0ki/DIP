@@ -66,5 +66,6 @@ private:
 	void printFeaturesToConsole(std::vector<Object> objects);
 	std::string generateText(int id, float value);
 	void AssignText(std::vector<Object> objects, cv::Mat& dst);
+	void convertColorToGray32(cv::Mat src, cv::Mat& dst);
 };
 

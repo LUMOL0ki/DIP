@@ -6,6 +6,8 @@
 
 void FeaturesDetector::imageThresholding(cv::Mat src, cv::Mat& dst, float threshold)
 {
+	convertColorToGray32(src, src);
+
 	dst = cv::Mat::zeros(src.size(), src.type()); // init destination with zeros (black).
 	for (int y = 0; y < src.rows; y++) 
 	{
@@ -47,6 +49,12 @@ void FeaturesDetector::AssignText(std::vector<Object> objects, cv::Mat& dst)
 		cv::putText(dst, generateText(object.getId(), object.getCenterOfMassArea()), cv::Point(centerOfMass.x - 12, centerOfMass.y), cv::FONT_HERSHEY_SIMPLEX, 0.3, ColorHelper::White());
 		cv::putText(dst, generateText(object.getId(), object.getCircumferenceArea()), cv::Point(centerOfMass.x - 12, centerOfMass.y + 11), cv::FONT_HERSHEY_SIMPLEX, 0.3, ColorHelper::White());
 	}
+}
+
+void FeaturesDetector::convertColorToGray32(cv::Mat src, cv::Mat& dst)
+{
+	cv::cvtColor(src.clone(), dst, CV_BGR2GRAY); // convert input color image to grayscale one, CV_BGR2GRAY specifies direction of conversion
+	dst.convertTo(dst, CV_32FC3, 1.0 / 255.0); // convert grayscale image from 8 bits to 32 bits, resulting values will be in the interval 0.0 - 1.0
 }
 
 void FeaturesDetector::etalonsClassification(cv::Mat src1, cv::Mat src2, cv::Mat& cl, cv::Mat& dst)
