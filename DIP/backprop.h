@@ -16,5 +16,7 @@ NN * createNN( int n, int h, int o );
 void releaseNN( NN *& nn );
 void feedforward( NN * nn );
 double backpropagation( NN * nn, double * t );
+double sigmoid(double x);
+double dsigmoid(double x);
 void setInput( NN * nn, double * in, bool verbose = false  );
 int getOutput( NN * nn, bool verbose = false );

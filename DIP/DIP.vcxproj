@@ -159,6 +159,7 @@
     <ClInclude Include="backprop.h" />
     <ClInclude Include="colorHelper.h" />
     <ClInclude Include="FeaturesDetector.h" />
+    <ClInclude Include="HOG.h" />
     <ClInclude Include="matrixHelper.h" />
     <ClInclude Include="object.h" />
     <ClInclude Include="slic.h" />
@@ -170,6 +171,7 @@
     <ClCompile Include="colorHelper.cpp" />
     <ClCompile Include="DIP.cpp" />
     <ClCompile Include="FeaturesDetector.cpp" />
+    <ClCompile Include="HOG.cpp" />
     <ClCompile Include="matrixHelper.cpp" />
     <ClCompile Include="object.cpp" />
     <ClCompile Include="slic.cpp" />

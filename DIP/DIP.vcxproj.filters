@@ -39,6 +39,9 @@
     <ClInclude Include="slic.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="HOG.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -63,6 +66,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="slic.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="HOG.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
