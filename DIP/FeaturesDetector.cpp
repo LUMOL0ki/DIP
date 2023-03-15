@@ -90,6 +90,15 @@ void FeaturesDetector::kmeansClustering(cv::Mat src1, cv::Mat src2, cv::Mat& cl,
 	processkmeans(indexedtestImg, dst, testObjects, kmeans);
 }
 
+std::vector<Object> FeaturesDetector::ExteractObjects(cv::Mat src)
+{
+	cv::Mat indexedImg = cv::Mat::zeros(src.size(), CV_32FC3);
+	std::vector<Object> Objects;
+
+	featureExtraction(src, indexedImg, Objects);
+	return Objects;
+}
+
 void FeaturesDetector::assignRandomColors(cv::Mat src, cv::Mat& dst, int count)
 {
 	std::vector<cv::Vec3f> colors;

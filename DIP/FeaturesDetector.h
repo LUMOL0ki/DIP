@@ -27,6 +27,7 @@ public:
 	
 	void etalonsClassification(cv::Mat src1, cv::Mat src2, cv::Mat& cl, cv::Mat& dst);
 	void kmeansClustering(cv::Mat src1, cv::Mat src2, cv::Mat& cl, cv::Mat& dst);
+	std::vector<Object> ExteractObjects(cv::Mat src);
 private:
 	/// <summary>
 	/// Color me daddy.

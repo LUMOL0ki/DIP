@@ -156,7 +156,7 @@ double dsigmoid(double x)
 	return LAMBDA * x * (1 - x);
 }
 
-void setInput( NN * nn, double * in, bool verbose ) 
+void setInput(NN* nn, double* in, bool verbose)
 {
 	memcpy( nn->in, in, sizeof( double ) * nn->n[0] );
 

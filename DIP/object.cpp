@@ -204,7 +204,7 @@ int Object::getNumberOfObjects(cv::Mat src, cv::Mat& dst)
 
 	initializeObjectsCounting(src, dst, objectCount);
 
-	return objectCount - 1; // minus backgroung;
+	return objectCount - 1; // minus background;
 }
 
 void Object::initializeObjectsCounting(cv::Mat& src, cv::Mat& dst, int& id)
