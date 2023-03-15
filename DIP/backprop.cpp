@@ -93,31 +93,70 @@ void releaseNN( NN *& nn )
 
 void feedforward( NN * nn ) 
 {
-	double** s = new double* [nn->l - 1];
-	for (int k = 0; k < nn->l - 1; k++) 
+	for (int k = 1; k < nn->l; k++)
 	{
-		s[k] = new double [nn->n[k + 1]];
-
-		for (int j = 0; j < nn->n[k + 1]; j++) 
+		for (int i = 0; i < nn->n[k]; i++)
 		{
-			int i = nn->n[k];
-			s[k][i] += nn->w[k][i][j] * nn->y[k][j];
-			nn->out[i] = 1 / (1 + nn->d[k][i]);
+			double sum = 0.0;
+			for (int j = 0; j < nn->n[k-1]; j++)
+			{
+				sum += nn->w[k-1][i][j] * nn->y[k-1][j];
+			}
+			nn->y[k][i] = sigmoid(sum);
 		}
 	}
-	//TODO
 }
 
 double backpropagation( NN * nn, double * t ) 
 {
 	double error = 0.0;
 
-	//TODO
+	for (int i = 0; i < nn->n[nn->l - 1]; i++)
+	{
+		double out = nn->y[nn->l - 1][i];
+		nn->d[nn->l - 1][i] = (t[i] - out) * dsigmoid(out);
+		error += 0.5 * SQR(t[i] - nn->out[i]);
+	}
+
+	for (int k = 0; k < nn->l - 2; k++)
+	{
+		for (int i = 0; i < nn->n[k]; i++)
+		{
+			double sum = 0.0;
+
+			for (int j = 0; j < nn->n[k+1]; j++)
+			{
+				sum += nn->d[k+1][j] * nn->w[k][i][j];
+			}
+			nn->d[k][i] = sum * dsigmoid(nn->y[k][i]);
+		}
+	}
+
+	for (int k = 0; k < nn->l - 1; k++) 
+	{
+		for (int i = 0; i < nn->n[k + 1]; i++) 
+		{
+			for (int j = 0; j < nn->n[k]; j++) 
+			{
+				nn->w[k][i][j] += ETA * nn->d[k + 1][i] * nn->y[k][j];
+			}
+		}
+	}
 
 	return error;
 }
 
-void setInput( NN * nn, double * in, bool verbose ) 
+double sigmoid(double x)
+{
+	return 1 / (1 + std::exp(-LAMBDA * x));
+}
+
+double dsigmoid(double x)
+{
+	return LAMBDA * x * (1 - x);
+}
+
+void setInput(NN* nn, double* in, bool verbose)
 {
 	memcpy( nn->in, in, sizeof( double ) * nn->n[0] );
 
@@ -137,7 +176,7 @@ int getOutput( NN * nn, bool verbose )
 {	
     double max = 0.0;
     int max_i = 0;
-    if(verbose) printf( " output=" );
+    if(verbose) printf( "output=" );
 	for ( int i = 0; i < nn->n[nn->l - 1]; i++ ) 
     {
 		if(verbose) printf( "%0.3f ", nn->out[i] );
