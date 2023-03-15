@@ -176,7 +176,7 @@ int getOutput( NN * nn, bool verbose )
 {	
     double max = 0.0;
     int max_i = 0;
-    if(verbose) printf( " output=" );
+    if(verbose) printf( "output=" );
 	for ( int i = 0; i < nn->n[nn->l - 1]; i++ ) 
     {
 		if(verbose) printf( "%0.3f ", nn->out[i] );

@@ -6,6 +6,13 @@ struct Boundary
 	float uMax;
 };
 
+enum ObjectType
+{
+	Square = 0,
+	Star = 1,
+	Rectangle = 2
+};
+
 class Object
 {
 public:
@@ -15,6 +22,9 @@ public:
 	/// <param name="id"></param>
 	/// <param name="src">source image.</param>
 	Object(int id, cv::Mat src);
+
+	ObjectType type;
+
 	/// <summary>
 	/// Get id of this object.
 	/// </summary>

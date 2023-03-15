@@ -39,12 +39,12 @@ void Slic::initializeCentroids(cv::Mat src, std::vector<cv::Point2d>& centroids)
                         continue;
                     }
                     cv::Vec3b neighbor_color = src.at<cv::Vec3b>(ny, nx);
-                    double gradient = sqrt(pow(color[0] - neighbor_color[0], 2) +
+                    double dRGB = sqrt(pow(color[0] - neighbor_color[0], 2) +
                         pow(color[1] - neighbor_color[1], 2) +
                         pow(color[2] - neighbor_color[2], 2));
-                    if (gradient < min_gradient) 
+                    if (dRGB < min_gradient)
                     {
-                        min_gradient = gradient;
+                        min_gradient = dRGB;
                         min_point = cv::Point2d(nx, ny);
                     }
                 }

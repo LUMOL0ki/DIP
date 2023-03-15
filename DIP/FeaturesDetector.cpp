@@ -57,7 +57,7 @@ void FeaturesDetector::convertColorToGray32(cv::Mat src, cv::Mat& dst)
 	dst.convertTo(dst, CV_32FC3, 1.0 / 255.0); // convert grayscale image from 8 bits to 32 bits, resulting values will be in the interval 0.0 - 1.0
 }
 
-void FeaturesDetector::etalonsClassification(cv::Mat src1, cv::Mat src2, cv::Mat& cl, cv::Mat& dst)
+std::vector<Object> FeaturesDetector::etalonsClassification(cv::Mat src1, cv::Mat src2, cv::Mat& cl, cv::Mat& dst)
 {
 	cv::Mat indexedtrainImg = cv::Mat::zeros(src1.size(), src1.type());
 	cl = cv::Mat::zeros(src1.size(), CV_32FC3);
@@ -71,31 +71,34 @@ void FeaturesDetector::etalonsClassification(cv::Mat src1, cv::Mat src2, cv::Mat
 	featureExtraction(src2, indexedtestImg, testObjects);
 	etalons = etalonsComputing(indexedtrainImg, cl, trainObjects);
 	processEtalons(indexedtestImg, dst, testObjects, etalons);
+	return testObjects;
 }
 
 void FeaturesDetector::kmeansClustering(cv::Mat src1, cv::Mat src2, cv::Mat& cl, cv::Mat& dst)
 {
-	cv::Mat indexedtrainImg = cv::Mat::zeros(src1.size(), src1.type());
+	cv::Mat indexedTrainImg = cv::Mat::zeros(src1.size(), src1.type());
 	cl = cv::Mat::zeros(src1.size(), CV_32FC3);
-	cv::Mat indexedtestImg = cv::Mat::zeros(src2.size(), src2.type());
+	cv::Mat indexedTestImg = cv::Mat::zeros(src2.size(), src2.type());
 	dst = cv::Mat::zeros(src2.size(), CV_32FC3);
 	std::vector<Object> trainObjects;
 	std::vector<Object> testObjects;
 	std::vector<cv::Point2f> kmeans;
 	int steps = 0;
 
-	featureExtraction(src1, indexedtrainImg, trainObjects);
-	featureExtraction(src2, indexedtestImg, testObjects);
-	kmeans = kmeansComputing(indexedtrainImg, cl, trainObjects, steps);
-	processkmeans(indexedtestImg, dst, testObjects, kmeans);
+	featureExtraction(src1, indexedTrainImg, trainObjects);
+	featureExtraction(src2, indexedTestImg, testObjects);
+	kmeans = kmeansComputing(indexedTrainImg, cl, trainObjects, steps);
+	processkmeans(indexedTestImg, dst, testObjects, kmeans);
 }
 
 std::vector<Object> FeaturesDetector::ExteractObjects(cv::Mat src)
 {
 	cv::Mat indexedImg = cv::Mat::zeros(src.size(), CV_32FC3);
+	cv::Mat cl = cv::Mat::zeros(src.size(), CV_32FC3);
 	std::vector<Object> Objects;
 
 	featureExtraction(src, indexedImg, Objects);
+	etalonsComputing(indexedImg, cl, Objects);
 	return Objects;
 }
 
@@ -125,7 +128,7 @@ int FeaturesDetector::featureExtraction(cv::Mat src, cv::Mat& dst, std::vector<O
 	return objectsCount;
 }
 
-std::vector<cv::Point2f> FeaturesDetector::etalonsComputing(cv::Mat src, cv::Mat& dst, std::vector<Object> objects)
+std::vector<cv::Point2f> FeaturesDetector::etalonsComputing(cv::Mat src, cv::Mat& dst, std::vector<Object>& objects)
 {
 	dst = cv::Mat(src.size(), CV_32FC3, ColorHelper::Black());
 	std::vector<cv::Point2f> etalons;
@@ -170,6 +173,15 @@ std::vector<cv::Point2f> FeaturesDetector::etalonsComputing(cv::Mat src, cv::Mat
 
 	drawEtalons(etalons, dst);
 
+	for (Object& object : objects)
+	{
+		float currentDistance = 100.0f;
+		int etalonId = -1;
+
+		assignIds(etalons, cv::Point2f(object.getFirstFeature(), object.getSecondFeature()), currentDistance, etalonId);
+		object.type = static_cast<ObjectType>(etalonId);
+	}
+
 	return etalons;
 }
 
@@ -179,7 +191,7 @@ void FeaturesDetector::calculateEtalon(cv::Point2f& etalon, int Nr, float etalon
 	etalon.y = (1.0f / (float)Nr) * etalonF2;
 }
 
-void FeaturesDetector::processEtalons(cv::Mat src, cv::Mat& dst, std::vector<Object> objects, std::vector<cv::Point2f> etalons)
+void FeaturesDetector::processEtalons(cv::Mat src, cv::Mat& dst, std::vector<Object>& objects, std::vector<cv::Point2f> etalons)
 {
 	dst = src.clone();
 	cv::cvtColor(dst, dst, cv::COLOR_GRAY2BGR);
@@ -187,12 +199,13 @@ void FeaturesDetector::processEtalons(cv::Mat src, cv::Mat& dst, std::vector<Obj
 
 	ColorHelper::generateColors(etalons.size(), colors, false);
 
-	for (Object object : objects) 
+	for (Object& object : objects)
 	{
 		float currentDistance = 100.0f;
 		int etalonId = -1;
 
 		assignIds(etalons, cv::Point2f(object.getFirstFeature(), object.getSecondFeature()), currentDistance, etalonId);
+		object.type = static_cast<ObjectType>(etalonId);
 
 		drawCenterOfObject(object, dst, colors[etalonId]);
 	}
@@ -285,7 +298,7 @@ void FeaturesDetector::recalculateCentroid(int numOfPixels, cv::Point2f& centroi
 	}
 }
 
-void FeaturesDetector::assignIds(cv::dnn::experimental_dnn_34_v7::MatShape& kmeansIds, cv::dnn::experimental_dnn_34_v7::MatShape& newkmeansIds, bool& isNewCentroid)
+void FeaturesDetector::assignIds(std::vector<int>& kmeansIds, std::vector<int>& newkmeansIds, bool& isNewCentroid)
 {
 	if (kmeansIds == newkmeansIds)
 	{

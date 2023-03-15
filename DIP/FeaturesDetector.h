@@ -25,7 +25,7 @@ public:
 	/// <returns></returns>
 	void objectIndexingColoredAndNumbered(cv::Mat src, cv::Mat& dst);
 	
-	void etalonsClassification(cv::Mat src1, cv::Mat src2, cv::Mat& cl, cv::Mat& dst);
+	std::vector<Object> etalonsClassification(cv::Mat src1, cv::Mat src2, cv::Mat& cl, cv::Mat& dst);
 	void kmeansClustering(cv::Mat src1, cv::Mat src2, cv::Mat& cl, cv::Mat& dst);
 	std::vector<Object> ExteractObjects(cv::Mat src);
 private:
@@ -38,10 +38,10 @@ private:
 	void assignRandomColors(cv::Mat src, cv::Mat& dst, int count);
 	int featureExtraction(cv::Mat src, cv::Mat& dst, std::vector<Object>& objects);
 	
-	std::vector<cv::Point2f> etalonsComputing(cv::Mat src, cv::Mat& dst, std::vector<Object> objects);
+	std::vector<cv::Point2f> etalonsComputing(cv::Mat src, cv::Mat& dst, std::vector<Object>& objects);
 	
 	void drawEtalons(std::vector<cv::Point2f>& etalons, cv::Mat& dst);
-	void processEtalons(cv::Mat src, cv::Mat& dst, std::vector<Object> objects, std::vector<cv::Point2f> etalons);
+	void processEtalons(cv::Mat src, cv::Mat& dst, std::vector<Object>& objects, std::vector<cv::Point2f> etalons);
 
 	void assignIds(std::vector<cv::Point2f> srcClasses, cv::Point2f pixel, float& currentDistance, int& currentId);
 
@@ -50,7 +50,7 @@ private:
 
 	std::vector<cv::Point2f> kmeansComputing(cv::Mat src, cv::Mat& dst, std::vector<Object> objects, int& steps, int numberOfClusters = 3);
 	void recalculateCentroid(int numOfPixels, cv::Point2f& centroid, float meanX, float meanY);
-	void assignIds(cv::dnn::experimental_dnn_34_v7::MatShape& kmeansIds, cv::dnn::experimental_dnn_34_v7::MatShape& newkmeansIds, bool& isNewCentroid);
+	void assignIds(std::vector<int>& kmeansIds, std::vector<int>& newkmeansIds, bool& isNewCentroid);
 	void checkDistance(float srcDistance, float& dstDistance, float newId, int& currentId);
 	void initializePixels(std::vector<Object>& objects, std::vector<cv::Point2f>& pixels, cv::Mat& dst);
 	void processkmeans(cv::Mat src, cv::Mat& dst, std::vector<Object> objects, std::vector<cv::Point2f> kmeans);
