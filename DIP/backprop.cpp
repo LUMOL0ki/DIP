@@ -113,9 +113,9 @@ double backpropagation( NN * nn, double * t )
 
 	for (int i = 0; i < nn->n[nn->l - 1]; i++)
 	{
-		double out = nn->y[nn->l - 1][i];
-		nn->d[nn->l - 1][i] = (t[i] - out) * dsigmoid(out);
+		// double out = nn->y[nn->l - 1][i];
 		error += 0.5 * SQR(t[i] - nn->out[i]);
+		nn->d[nn->l - 1][i] = (t[i] - nn->out[i]) * dsigmoid(nn->out[i]);
 	}
 
 	for (int k = 0; k < nn->l - 2; k++)
