@@ -46,8 +46,8 @@ void FeaturesDetector::AssignText(std::vector<Object> objects, cv::Mat& dst)
 {
 	for (Object object : objects) {
 		cv::Point centerOfMass = object.getCenterOfMass();
-		cv::putText(dst, generateText(object.getId(), object.getCenterOfMassArea()), cv::Point(centerOfMass.x - 12, centerOfMass.y), cv::FONT_HERSHEY_SIMPLEX, 0.3, ColorHelper::White());
-		cv::putText(dst, generateText(object.getId(), object.getCircumferenceArea()), cv::Point(centerOfMass.x - 12, centerOfMass.y + 11), cv::FONT_HERSHEY_SIMPLEX, 0.3, ColorHelper::White());
+		cv::putText(dst, generateText(object.getId(), object.getCenterOfMassArea()), cv::Point(centerOfMass.x - 12, centerOfMass.y), cv::FONT_HERSHEY_SIMPLEX, 0.3, ColorHelper::white());
+		cv::putText(dst, generateText(object.getId(), object.getCircumferenceArea()), cv::Point(centerOfMass.x - 12, centerOfMass.y + 11), cv::FONT_HERSHEY_SIMPLEX, 0.3, ColorHelper::white());
 	}
 }
 
@@ -130,7 +130,7 @@ int FeaturesDetector::featureExtraction(cv::Mat src, cv::Mat& dst, std::vector<O
 
 std::vector<cv::Point2f> FeaturesDetector::etalonsComputing(cv::Mat src, cv::Mat& dst, std::vector<Object>& objects)
 {
-	dst = cv::Mat(src.size(), CV_32FC3, ColorHelper::Black());
+	dst = cv::Mat(src.size(), CV_32FC3, ColorHelper::black());
 	std::vector<cv::Point2f> etalons;
 	float currentF1 = objects[0].getFirstFeature();
 	float currentF2 = objects[0].getSecondFeature();
@@ -139,7 +139,7 @@ std::vector<cv::Point2f> FeaturesDetector::etalonsComputing(cv::Mat src, cv::Mat
 	int Nr = 0;
 
 	for (Object object : objects) {
-		cv::circle(dst, cv::Point2f(object.getFirstFeature() * dst.cols, object.getSecondFeature() * dst.rows), 3, ColorHelper::White());
+		cv::circle(dst, cv::Point2f(object.getFirstFeature() * dst.cols, object.getSecondFeature() * dst.rows), 3, ColorHelper::white());
 		
 		if (round(object.getFirstFeature()) == round(currentF1) && round(object.getSecondFeature()) == round(currentF2))
 		{
@@ -232,7 +232,7 @@ double FeaturesDetector::calculateDistance(float x, float y)
 
 std::vector<cv::Point2f> FeaturesDetector::kmeansComputing(cv::Mat src, cv::Mat& dst, std::vector<Object> objects, int& steps, int numberOfClusters)
 {
-	dst = cv::Mat(src.size(), CV_32FC3, ColorHelper::Black());
+	dst = cv::Mat(src.size(), CV_32FC3, ColorHelper::black());
 
 	std::vector<cv::Point2f> centroids;
 	std::vector<cv::Point2f> pixels;
@@ -327,7 +327,7 @@ void FeaturesDetector::initializePixels(std::vector<Object>& objects, std::vecto
 		newPixel.x = object.getFirstFeature();
 		newPixel.y = object.getSecondFeature();
 		pixels.push_back(newPixel);
-		cv::circle(dst, cv::Point(newPixel.x * dst.cols, newPixel.y * dst.rows), 3, ColorHelper::White());
+		cv::circle(dst, cv::Point(newPixel.x * dst.cols, newPixel.y * dst.rows), 3, ColorHelper::white());
 	}
 }
 
