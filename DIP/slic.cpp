@@ -69,7 +69,7 @@ void Slic::computeSlic()
 			}
 		}
 		iterationsCounter++;
-		maxDistanceMoved = recalculateClusters(src, indexer, clusterCenters);
+		maxDistanceMoved = recalculateClusterCenters(src, indexer, clusterCenters);
 
 		printf("Iteration: %d\n", iterationsCounter);
 
@@ -222,7 +222,7 @@ void Slic::getBoundaries(cv::Mat src, ClusterCenter clusterCenter, cv::Point& st
 	}
 }
 
-float Slic::recalculateClusters(cv::Mat& src, cv::Mat& indexer, std::vector<ClusterCenter>& clusterCenters)
+float Slic::recalculateClusterCenters(cv::Mat& src, cv::Mat& indexer, std::vector<ClusterCenter>& clusterCenters)
 {
 	std::vector<ClusterCenter> newClusterCenters(clusterCenters.size());
 	std::vector<int> clusterCenterCounts(clusterCenters.size(), 0);
