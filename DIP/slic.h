@@ -22,5 +22,5 @@ private:
 	float euclideanDistance(ClusterCenter& a, ClusterCenter& b);
 	cv::Point findLowestGradientPosition(cv::Mat& src, ClusterCenter clusterCenter);
 	void getBoundaries(cv::Mat src, ClusterCenter clusterCenter, cv::Point& start, cv::Point& end, int S);
-	float recalculateClusters(cv::Mat& src, cv::Mat& indexer, std::vector<ClusterCenter>& clusterCenters);
+	float recalculateClusterCenters(cv::Mat& src, cv::Mat& indexer, std::vector<ClusterCenter>& clusterCenters);
 };
